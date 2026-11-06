@@ -32,6 +32,7 @@ const IDLE_DISPOSE_MS = 60_000;
 let win: BrowserWindow | null = null;
 let chain: Promise<unknown> = Promise.resolve();
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
+let loadCount = 0;
 
 function clearIdleDispose(): void {
   if (idleTimer) {
@@ -92,7 +93,9 @@ async function loadCapture(
   scheme: "light" | "dark",
   data: TweetCardData | TextCardData,
 ): Promise<void> {
-  const search = captureQuery(kind, scheme);
+  /** A load that differs only in its hash is a same-document navigation: the page keeps the previous card and its ready flag. A unique query forces a fresh document. */
+  loadCount += 1;
+  const search = `${captureQuery(kind, scheme)}&load=${loadCount}`;
   const hash = captureHash(data);
   const devUrl = process.env.ELECTRON_RENDERER_URL;
   const load = devUrl
